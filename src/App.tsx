@@ -400,6 +400,18 @@ export default function App() {
             fitMode: el.fitMode,
           });
         }}
+        onItemFileDrop={(i, dataUrl) => {
+          setArrElements((els) =>
+            els.map((el, idx) =>
+              idx === i
+                ? {
+                    ...el,
+                    src: dataUrl, // aquí cambias el src a la cadena Base64
+                  }
+                : el
+            )
+          );
+        }}
         label="arrElement"
         style={{ cursor: "move" }}
         renderContent={(el) => (

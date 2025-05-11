@@ -21,6 +21,7 @@ export interface RectanglesProps<T> {
   label: string;
   style?: React.CSSProperties;
   renderContent?(item: T): React.ReactNode;
+  onItemFileDrop?: (i: number, dataUrl: string) => void;
 }
 
 export function Rectangles<T>({
@@ -34,6 +35,7 @@ export function Rectangles<T>({
   renderContent,
   selectedKey,
   onSelectKey,
+  onItemFileDrop,
 }: RectanglesProps<T>) {
   const [lockAspect, setLockAspect] = useState(false);
   const handleResizeStart: RndResizeStartCallback = (e) =>
@@ -69,6 +71,22 @@ export function Rectangles<T>({
             style={{
               ...style,
               border: isSelected ? "3px solid yellow" : style?.border,
+            }}
+            onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+            onDrop={(e: React.DragEvent<HTMLDivElement>) => {
+              e.stopPropagation();
+              e.preventDefault();
+              if (!onItemFileDrop) return;
+              const file = e.dataTransfer.files[0];
+              if (!file?.type.startsWith("image/")) return;
+              const reader = new FileReader();
+              reader.onload = () => {
+                onItemFileDrop(i, reader.result as string);
+              };
+              reader.readAsDataURL(file);
             }}
           >
             {renderContent ? (
