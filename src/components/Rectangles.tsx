@@ -1,5 +1,5 @@
-import React from "react";
-import { Rnd } from "react-rnd";
+import React, { useState } from "react";
+import { Rnd, type RndResizeStartCallback } from "react-rnd";
 
 export interface Rect {
   x: number;
@@ -8,12 +8,16 @@ export interface Rect {
   h: number;
 }
 
-interface RectanglesProps<T> {
+export interface RectanglesProps<T> {
   items: T[];
   getKey(item: T, i: number): string;
   getRect(item: T): Rect;
   onDragResize(i: number, rect: Rect): void;
   onDoubleClick(i: number): void;
+  /** clave del elemento actualmente seleccionado */
+  selectedKey?: string | null;
+  /** callback al hacer clic, recibe la clave que devuelve getKey */
+  onSelectKey?: (key: string) => void;
   label: string;
   style?: React.CSSProperties;
   renderContent?(item: T): React.ReactNode;
@@ -28,28 +32,44 @@ export function Rectangles<T>({
   label,
   style,
   renderContent,
+  selectedKey,
+  onSelectKey,
 }: RectanglesProps<T>) {
+  const [lockAspect, setLockAspect] = useState(false);
+  const handleResizeStart: RndResizeStartCallback = (e) =>
+    setLockAspect(e.ctrlKey);
+
   return (
     <>
       {items.map((item, i) => {
+        const key = getKey(item, i);
         const { x, y, w, h } = getRect(item);
+        const isSelected = key === selectedKey;
+
         return (
           <Rnd
-            key={getKey(item, i)}
+            key={key}
             size={{ width: w, height: h }}
             position={{ x, y }}
             bounds="parent"
-            onDragStop={(_, d) => onDragResize(i, { x: d.x, y: d.y, w, h })}
-            onResizeStop={(_, __, el, __2, pos) =>
+            lockAspectRatio={lockAspect}
+            onResizeStart={handleResizeStart}
+            onResizeStop={(_, __, el, __2, pos) => {
               onDragResize(i, {
                 x: pos.x,
                 y: pos.y,
                 w: el.offsetWidth,
                 h: el.offsetHeight,
-              })
-            }
+              });
+              setLockAspect(false);
+            }}
+            onDragStop={(_, d) => onDragResize(i, { x: d.x, y: d.y, w, h })}
+            onMouseDown={() => onSelectKey?.(key)} // 👈
             onDoubleClick={() => onDoubleClick(i)}
-            style={style}
+            style={{
+              ...style,
+              border: isSelected ? "3px solid yellow" : style?.border,
+            }}
           >
             {renderContent ? (
               renderContent(item)

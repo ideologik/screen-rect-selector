@@ -57,6 +57,9 @@ export default function App() {
   const W = rect?.width ?? window.innerWidth;
   const H = rect?.height ?? window.innerHeight;
 
+  // Rectangulo seleccionado
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+
   // Handlers de imagen
   function onDropImage(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -113,7 +116,7 @@ export default function App() {
 
   // Doble clic
   function onDoubleClickRect(r: RectDraw) {
-    setForm({ mode: "simple", index: -1, rect: r });
+    setForm({ mode: "simple", index: -1, rect: r, fitMode: "contain" });
   }
 
   // Guardar formulario
@@ -174,6 +177,7 @@ export default function App() {
         state: "disabled",
         animationType: "hover",
         animation: "animate__pulse",
+        fitMode: form.fitMode!,
       };
       if (index < 0) {
         setArrElements((aeArr) => [...aeArr, ae]);
@@ -249,11 +253,15 @@ export default function App() {
         onDoubleClick={(i) => onDoubleClickRect(drawn[i])}
         label="simple"
         style={{ border: "2px dashed #0f0", background: "rgba(0,255,0,0.2)" }}
+        selectedKey={selectedKey}
+        onSelectKey={(key) => setSelectedKey(key)}
       />
 
       {/* simpleZones */}
       <Rectangles<SimpleZone>
         items={simpleZones}
+        selectedKey={selectedKey}
+        onSelectKey={(key) => setSelectedKey(key)}
         getKey={(_, i) => `s${i}`}
         getRect={(z) => ({
           x: (z.left / 100) * W,
@@ -294,6 +302,8 @@ export default function App() {
 
       {/* useZones */}
       <Rectangles<UseZone>
+        selectedKey={selectedKey}
+        onSelectKey={(key) => setSelectedKey(key)}
         items={useZones}
         getKey={(z) => z.id}
         getRect={(z) => ({
@@ -347,6 +357,8 @@ export default function App() {
 
       {/* arrElements */}
       <Rectangles<ArrElement>
+        selectedKey={selectedKey}
+        onSelectKey={(key) => setSelectedKey(key)}
         items={arrElements}
         getKey={(el) => el.uniqueId}
         getRect={(el) => ({
@@ -385,21 +397,32 @@ export default function App() {
             elId: el.id,
             elSrc: el.src,
             elText: el.text,
+            fitMode: el.fitMode,
           });
         }}
         label="arrElement"
         style={{ cursor: "move" }}
         renderContent={(el) => (
-          <img
-            src={el.src}
-            alt={el.text}
-            style={{ width: "100%", height: "100%", objectFit: "fill" }}
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              backgroundImage: `url(${el.src})`,
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              // si fitMode==="contain", mantiene proporción
+              // si fitMode==="fill", estira a 100%×100%
+              backgroundSize:
+                el.fitMode === "contain" ? "contain" : "100% 100%",
+            }}
           />
         )}
       />
 
       {/* hotspotToasts */}
       <Rectangles<HotspotToast>
+        selectedKey={selectedKey}
+        onSelectKey={(key) => setSelectedKey(key)}
         items={hotspotToasts}
         getKey={(_, i) => `ht${i}`}
         getRect={(h) => ({

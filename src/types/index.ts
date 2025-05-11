@@ -35,6 +35,7 @@ export type ArrElement = {
   state: string;
   animationType: string;
   animation: string;
+  fitMode: "contain" | "fill";
 };
 export type HotspotToast = {
   component: "HotspotToast";

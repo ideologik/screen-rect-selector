@@ -16,6 +16,7 @@ export interface EditingForm {
   elText?: string;
   // hotspotToast
   content?: string;
+  fitMode?: "contain" | "fill";
 }
 
 interface EditFormProps {
@@ -145,6 +146,23 @@ export function EditForm({ form, onChange, onSave, onCancel }: EditFormProps) {
                       onChange({ ...form, elText: e.target.value })
                     }
                   />
+                </label>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <label>
+                  Escalar imagen:&nbsp;
+                  <select
+                    value={form.fitMode}
+                    onChange={(e) =>
+                      onChange({
+                        ...form,
+                        fitMode: e.target.value as "contain" | "fill",
+                      })
+                    }
+                  >
+                    <option value="contain">Proporcional (contain)</option>
+                    <option value="fill">Deformar (fill)</option>
+                  </select>
                 </label>
               </div>
             </>
