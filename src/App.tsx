@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { Canvas } from "./components/Canvas";
 import { useLocalStorageState } from "./hooks/useLocalStorageState";
@@ -51,6 +51,9 @@ export default function App() {
   const [drawing, setDrawing] = useState(false);
   const [startPt, setStartPt] = useState<{ x: number; y: number }>();
   const [form, setForm] = useState<EditingForm | null>(null);
+
+  // item seleccionado
+  // App.tsx
 
   // dimensiones del contenedor
   const rect = containerRef.current?.getBoundingClientRect();
@@ -228,6 +231,49 @@ export default function App() {
     localStorage.clear();
   }
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Delete" || !selectedKey) return;
+
+      const [layer, id] = selectedKey.split("-", 2);
+
+      switch (layer) {
+        case "drawn":
+          setDrawn((ds) => ds.filter((d) => d.id !== id));
+          break;
+        case "simple":
+          setSimpleZones((zs) =>
+            zs.filter((_, i) => `simple-${i}` !== selectedKey)
+          );
+          break;
+        case "use":
+          setUseZones((zs) => zs.filter((z) => `use-${z.id}` !== selectedKey));
+          break;
+        case "arr":
+          setArrElements((ae) =>
+            ae.filter((el) => `arr-${el.uniqueId}` !== selectedKey)
+          );
+          break;
+        case "toast":
+          setHotspotToasts((ht) =>
+            ht.filter((_, i) => `toast-${i}` !== selectedKey)
+          );
+          break;
+      }
+
+      setSelectedKey(null);
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    selectedKey,
+    setArrElements,
+    setHotspotToasts,
+    setSimpleZones,
+    setUseZones,
+  ]);
+
   return (
     <Canvas
       ref={containerRef}
@@ -241,7 +287,7 @@ export default function App() {
       {/* temporales */}
       <Rectangles<RectDraw>
         items={drawn}
-        getKey={(r) => r.id}
+        getKey={(r) => `drawn-${r.id}`}
         getRect={(r) => ({ x: r.x, y: r.y, w: r.width, h: r.height })}
         onDragResize={(i, r) =>
           setDrawn((ds) =>
@@ -262,7 +308,7 @@ export default function App() {
         items={simpleZones}
         selectedKey={selectedKey}
         onSelectKey={(key) => setSelectedKey(key)}
-        getKey={(_, i) => `s${i}`}
+        getKey={(_, i) => `simple-${i}`}
         getRect={(z) => ({
           x: (z.left / 100) * W,
           y: (z.top / 100) * H,
@@ -305,7 +351,7 @@ export default function App() {
         selectedKey={selectedKey}
         onSelectKey={(key) => setSelectedKey(key)}
         items={useZones}
-        getKey={(z) => z.id}
+        getKey={(z) => `use-${z.id}`}
         getRect={(z) => ({
           x: (z.config.left / 100) * W,
           y: (z.config.top / 100) * H,
@@ -360,7 +406,7 @@ export default function App() {
         selectedKey={selectedKey}
         onSelectKey={(key) => setSelectedKey(key)}
         items={arrElements}
-        getKey={(el) => el.uniqueId}
+        getKey={(el) => `arr-${el.uniqueId}`}
         getRect={(el) => ({
           x: (el.left / 100) * W,
           y: (el.top / 100) * H,
@@ -436,7 +482,7 @@ export default function App() {
         selectedKey={selectedKey}
         onSelectKey={(key) => setSelectedKey(key)}
         items={hotspotToasts}
-        getKey={(_, i) => `ht${i}`}
+        getKey={(_, i) => `toast-${i}`}
         getRect={(h) => ({
           x: (h.props.rect.left / 100) * W,
           y: (h.props.rect.top / 100) * H,

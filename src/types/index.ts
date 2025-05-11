@@ -51,3 +51,10 @@ export type RectDraw = {
   width: number;
   height: number;
 };
+
+export type Layer =
+  | "drawn"
+  | "simpleZones"
+  | "useZones"
+  | "arrElements"
+  | "hotspotToasts";
